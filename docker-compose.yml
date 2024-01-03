@@ -26,6 +26,7 @@ services:
       - .env.dev
     ports:
       - "${API_PORT}:${API_PORT}"
+    restart: always
     depends_on:
       - db
     volumes:

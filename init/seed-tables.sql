@@ -1,3 +1,7 @@
+CREATE DATABASE IF NOT EXISTS house_cup;
+
+use house_cup;
+
 DROP TABLE IF EXISTS Points;
 DROP TABLE IF EXISTS Students;
 DROP TABLE IF EXISTS Houses;

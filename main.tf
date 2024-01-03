@@ -109,6 +109,8 @@ resource "aws_security_group" "golang_sg" {
   name        = "golang_sg"
   description = "Security Group for Golang Server"
 
+  vpc_id = aws_vpc.house_cup_vpc.id
+
   ingress {
     from_port   = 22
     to_port     = 22
@@ -163,6 +165,9 @@ resource "aws_instance" "golang_server" {
   key_name                    = "HouseCupKeyPair" # Replace with the name of your key pair
   associate_public_ip_address = true
 
+  # Specify the correct subnet ID for public subnet A or B
+  subnet_id = aws_subnet.subnet_a_public.id
+
   # Associate the golang_sg security group
   vpc_security_group_ids = [aws_security_group.golang_sg.id] # Ensure the instance gets a public IP
 
@@ -174,6 +179,7 @@ resource "aws_instance" "golang_server" {
                      sudo docker run -d -p 9090:9090 ngambino0192/house-cup-api:latest -e DB_HOST=${aws_db_instance.mysql.endpoint} ngambino0192/house-cup-api:latest
                      EOF
 
+  depends_on = [aws_db_instance.mysql]
   tags = {
     Name = "golang-server"
   }
@@ -220,6 +226,14 @@ resource "aws_instance" "bastion_host" {
   # Associate a security group allowing SSH access from your local machine
   vpc_security_group_ids = [aws_security_group.bastion_sg.id]
 
+  user_data = <<-EOF
+                    #!/bin/bash
+                    sudo yum update -y
+                    sudo yum install mysql -y
+                    EOF
+
+  depends_on = [aws_db_instance.mysql]
+
   tags = {
     Name = "bastion-host"
   }
@@ -262,7 +276,7 @@ resource "aws_db_instance" "mysql" {
   vpc_security_group_ids = [aws_security_group.rds_sg.id]
 
   skip_final_snapshot = true
-  #   publicly_accessible = false
+  publicly_accessible = false
 
   tags = {
     Name = "house-cup-db-tag"
